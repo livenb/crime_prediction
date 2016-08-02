@@ -1,5 +1,8 @@
 # The data file
 data/
+# The vim swp file
+*.swp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
