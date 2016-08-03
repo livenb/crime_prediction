@@ -31,34 +31,29 @@ def time_enginerring(sfdata):
     sfdata['Year'] = sfdata['Date'].apply(lambda x: int(x.split('/')[2]))
     return sfdata
 
-
-def silhouette_kmeans(X):
-    s_scores = []
-    for k in xrange(50):
-        model = KMeans(n_clusters=k)
-        model.fit(X)
-        labels = model.labels_
-        s_scores.append(silhouette_score(X, labels, metric='euclidean'))
-    plt.plot(range(50), s_scores)
-    plt.title('Choose K based on Silhouette Score')
-    plt.xlabel('Number of Cluster')
-    plt.ylabel('Silhouette Score')
-    plt.show()
-
-
-def elbow_kmeans(X):
+    
+def elbow_silhouette_kmeans(X):
     dists = []
-    for k in xrange(2, 50):
+    s_scores = []
+    for k in xrange(2, 20):
+        print k
         model = KMeans(n_clusters=k)
         model.fit(X)
-        centroids = model.cluser_centers_
+        centroids = model.cluster_centers_ 
+        labels = model.labels_
         dist = cdist(X, centroids)
         dists.append(dist.min(axis=1).sum())
-    plt.plot(xrange(2, 50), dists, 'b*-')
+        s_scores.append(silhouette_score(X, labels, metric='euclidean'))
+    plt.plot(xrange(2, 20), dists, 'b*-')
     plt.grid(True)
     plt.xlabel('Number of clusters')
     plt.ylabel('sum of squares')
     plt.title('Elbow for KMeans clustering')
+    plt.figure()
+    plt.plot(range(50), s_scores)
+    plt.title('Choose K based on Silhouette Score')
+    plt.xlabel('Number of Cluster')
+    plt.ylabel('Silhouette Score')
     plt.show()
 
 
@@ -70,5 +65,8 @@ if __name__ == '__main__':
     print sfdata.info()
     sfdata = clean_data(sfdata)
     X = sfdata[['X', 'Y']].values
-    elbow_kmeans(X)
+    elbow_silhouette_kmeans(X)
+    # model = KMeans()
+    # model.fit(X)
+    # print model.cluster_centers_
    
