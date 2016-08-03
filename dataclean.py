@@ -17,9 +17,9 @@ def clean_data(sfdata):
                'LIQUOR LAWS', 'RUNAWAY', 'EMBEZZLEMENT',
                'FAMILY OFFENSES', 'BAD CHECKS',
                'GAMBLING', 'BRIBERY', 'PORNOGRAPHY/OBSCENE MAT', 'TREA']
-    print sfdata.info()
+    # print sfdata.info()
     sfdata = sfdata.drop(sfdata[sfdata['Category'].isin(dropLst)].index)
-    print sfdata.info()
+    # print sfdata.info()
     sfdata = time_enginerring(sfdata)
     return sfdata
 
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     lafile1 = 'data/LA_SHERIFF_1.csv'
     lafile2 = 'data/LA_SHERIFF_2.csv'
     sfdata = load_data(sffile)
-    print sfdata.info()
+    # print sfdata.info()
     sfdata = clean_data(sfdata)
     X = sfdata[['X', 'Y']].values
     elbow_silhouette_kmeans(X)
