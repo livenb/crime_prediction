@@ -45,6 +45,51 @@ def clean_sf_data(filename):
     return sfdata
 
 
+def merg_la_data(filename1, filename2):
+    ladata1 = pd.read_csv(filename1)
+    ladata2 = pd.read_csv(filename2)
+    ladata = pd.concat([ladata1, ladata2])
+    ladata = ladata.drop_duplicates().reset_index(drop=True)
+    return ladata
+
+
+def clean_la_data(filename1, filename2):
+    ladict = {1: ['LARCENY THEFT'],
+              2: ['ROBBERY', ],
+              3: ['DRUNK / ALCOHOL / DRUGS', 'NARCOTICS', 'LIQUOR LAWS'],
+              4: ['AGGRAVATED ASSAULT', 'NON-AGGRAVATED ASSAULTS'],
+              5: ['GRAND THEFT AUTO'],
+              6: ['VANDALISM'],
+              7: ['BURGLARY'],
+              8: ['CRIMINAL HOMICIDE'],
+              9: ['SEX OFFENSES FELONIES', 'SEX OFFENSES MISDEMEANORS',
+                  'FORCIBLE RAPE'],
+              10: ['DRUNK DRIVING VEHICLE / BOAT']}
+    ladata = merg_la_data(filename1, filename2)
+    ladata['CrimeCat'] = 0
+    for key in laDict:
+        crimes = laDict[key]
+        ladata['CrimeCat'] += ladata['CRIME_CATEGORY_DESCRIPTION'].apply(lambda x:
+                                                       key if x in crimes
+                                                       else 0)
+    ladata = ladata.drop(ladata[ladata['CrimeCat'] == 0].index)
+    ladata = ladata.drop(ladata[(ladata['LATITUDE'] > 42) | (ladata['LATITUDE'] < -40)].index)
+    ladata['CRIME_DATE'] = pd.to_datetime(ladata['CRIME_DATE'])
+    ladata['Hour'] = ladata['CRIME_DATE'].apply(lambda x: x.hour)
+    ladata['Month'] = ladata['CRIME_DATE'].apply(lambda x: x.month)
+    ladata['Day'] = ladata['CRIME_DATE'].apply(lambda x: x.day)
+    ladata['Year'] = ladata['CRIME_DATE'].apply(lambda x: x.year)
+    ladata['DayOfWeek'] = ladata['CRIME_DATE'].apply(lambda x: x.isoweekday())
+    dropLst = ['CRIME_CATEGORY_DESCRIPTION', 'CRIME_CATEGORY_NUMBER',
+               'CRIME_DATE', 'CRIME_IDENTIFIER', 'CRIME_YEAR',
+               'GANG_RELATED', 'GEO_CRIME_LOCATION', 'LOCATION',
+               'STATE', 'STATION_IDENTIFIER', 'STATISTICAL_CODE',
+               'VICTIM_COUNT', 'ZIP', 'REPORTING_DISTRICT']
+    ladata = ladata.drop(dropLst, axis=1)
+    ladata = ladata.dropna()
+    ladata.to_csv('../data/la_clean.csv')
+    return ladata
+
 def clean_ppd_data(filename):
     ppdDict = {1: ['Thefts', 'Theft from Vehicle'], 
                2: ['Robbery No Firearm', 'Robbery Firearm'],
@@ -73,18 +118,6 @@ def clean_ls_data(filename):
               10: ['DUI']}
 
 
-def clean_la_data(filename1, filename2):
-    ladict = {1: ['LARCENY THEFT'],
-              2: ['ROBBERY', ],
-              3: ['DRUNK / ALCOHOL / DRUGS', 'NARCOTICS', 'LIQUOR LAWS'],
-              4: ['AGGRAVATED ASSAULT', 'NON-AGGRAVATED ASSAULTS'],
-              5: ['GRAND THEFT AUTO'],
-              6: ['VANDALISM'],
-              7: ['BURGLARY'],
-              8: ['CRIMINAL HOMICIDE'],
-              9: ['SEX OFFENSES FELONIES', 'SEX OFFENSES MISDEMEANORS',
-                  'FORCIBLE RAPE'],
-              10: ['DRUNK DRIVING VEHICLE / BOAT']}
 
 def clean_detroit_data(filename):
     dpdDict = {1: ['LARCENY'],
@@ -114,3 +147,4 @@ if __name__ == '__main__':
     lafile1 = 'data/LA_SHERIFF_1.csv'
     lafile2 = 'data/LA_SHERIFF_2.csv'
     sfdata = clean_sf_data(sffile)
+    ladata = clean_la_data(lafile1, lafile2)
