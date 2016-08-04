@@ -32,13 +32,15 @@ def elbow_silhouette_kmeans(X, year=None):
     ax2.set_xlabel('Number of Cluster')
     ax2.set_ylabel('Silhouette Score')
     # plt.show()
+    plt.savefig('{}_kmeans.png'.format(year))
 
 
 def kmeans_by_year(X, yrs, years):
     for yr in years:
         X_yr = X[yrs == yr]
         elbow_silhouette_kmeans(X_yr, yr)
-    plt.show()
+    # plt.show()
+    print 'kmeans done!'
 
 
 def build_nmf(X, yrs, years):
