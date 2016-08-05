@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 
 
 crimes = {1: 'Theft/Larcery', 2: 'Robebery', 3: 'Nacotic/Alcochol',
@@ -35,11 +36,11 @@ def clean_sf_data(filename):
     sfdata['Month'] = sfdata['Date'].apply(lambda x: int(x.split('/')[0]))
     sfdata['Day'] = sfdata['Date'].apply(lambda x: int(x.split('/')[1]))
     sfdata['Year'] = sfdata['Date'].apply(lambda x: int(x.split('/')[2]))
-    dropLst = ['Time', 'Date', 'Category', 'IncidntNum',
+    dropLst = ['Time', 'Date', 'IncidntNum',
                'Location', 'Resolution', 'PdId']
     sfdata = sfdata.drop(dropLst, axis=1)
     dowDict = {'Thursday':4, 'Friday':5, 'Wednesday':3,
-                'Monday':1, 'Sunday':0,'Saturday':6, 'Tuesday':2}
+                'Monday':1, 'Sunday':7,'Saturday':6, 'Tuesday':2}
     sfdata['DayOfWeek'] =sfdata['DayOfWeek'].apply(lambda x: dowDict[x]) 
     sfdata.to_csv('data/sfpd_clean.csv')
     return sfdata
@@ -114,8 +115,22 @@ def clean_ppd_data(filename):
                    'Homicide - Justifiable'],
                9: ['Rape', 'Prostitution and Commercialized Vice'],
                10: ['DRIVING UNDER THE INFLUENCE']}
+    ppd = load_data(filename)
+    ppd = get_crime_cat(ppd, 'TEXT_GENERAL_CODE', ppdDict)
+    ppd['X'] = ppd['SHAPE'].apply(lambda x: float(re.sub(r'(\(|\))', '', x).split()[1]))
+    ppd['Y'] = ppd['SHAPE'].apply(lambda x: float(re.sub(r'(\(|\))', '', x).split()[2]))
+    ppd = ppd.dropna()
+    ppd['Year'] = ppd['DISPATCH_DATE'].apply(lambda x: int(x.split('-')[0]))
+    ppd['Month'] = ppd['DISPATCH_DATE'].apply(lambda x: int(x.split('-')[1]))
+    ppd['Day'] = ppd['DISPATCH_DATE'].apply(lambda x: int(x.split('-')[2]))
+    dropLst = ['DC_DIST', 'PSA', 'DISPATCH_DATE_TIME',
+               'DISPATCH_DATE', 'DISPATCH_TIME', 'DC_KEY',
+               'UCR_GENERAL', 'SHAPE']
+    ppd = ppd.drop(dropLst, axis=1)
+    ppd.to_csv('../data/ppd_clean.csv')   
+    return ppd
 
-    
+
 def clean_ls_data(filename):
     lvDict = {1: ['THEFT/LARCENY', 'VEHICLE BREAK-IN/THEFT'],
               2: ['ROBBERY'],
@@ -127,7 +142,22 @@ def clean_ls_data(filename):
               8: ['HOMICIDE'],
               9: ['SEX CRIMES'],
               10: ['DUI']}
-
+    lodata = load_data(filename)
+    lodata = get_crime_cat(lodata, 'CRIME_TYPE', lvDict)
+    lodata['DATE_OCCURED'] = pd.to_datetime(lodata['DATE_OCCURED'])
+    dropLst = ['INCIDENT_NUMBER', 'DATE_REPORTED', 'NIBRS_CODE', 'UCR_HIERARCHY',
+               'ATT_COMP', 'LMPD_BEAT', 'PREMISE_TYPE', 'ID']
+    lodata = lodata.drop(dropLst, axis=1)
+    lodata = lodata.dropna()
+    lodata['Year'] = lodata['DATE_OCCURED'].apply(lambda x: x.year)
+    lodata['Month'] = lodata['DATE_OCCURED'].apply(lambda x: x.month)
+    lodata['Day'] = lodata['DATE_OCCURED'].apply(lambda x: x.day)
+    lodata['Hour'] = lodata['DATE_OCCURED'].apply(lambda x: x.hour)
+    lodata['DayOfWeek'] = lodata['DATE_OCCURED'].apply(lambda x: x.isoweekday())
+    dropLst2 = ['CITY', 'DATE_OCCURED']
+    lodata = lodata.drop(dropLst2, axis=1)
+    lodata.to_csv('../data/lvpd_clean.csv')
+    return lodata
 
 
 def clean_detroit_data(filename):
@@ -141,6 +171,7 @@ def clean_detroit_data(filename):
                8: ['HOMICIDE', 'JUSTIFIABLE HOMICIDE', 'NEGLIGENT HOMICIDE'],
                9: ['OBSCENITY'],
                10: ['OUIL']}
+    detroitdata = load_data(filename)
     detroitdata = get_crime_cat(detroitdata, 'CATEGORY', dpdDict)
     detroitdata = detroitdata.drop(detroitdata[(detroitdata['LON'] < -100) | (detroitdata['LON'] > 20)].index)
     detroitdata['month'] = detroitdata['INCIDENTDATE'].apply(lambda x: int(x.split('/')[0]))
@@ -171,4 +202,4 @@ if __name__ == '__main__':
     dpdfile = 'data/DPD.csv'
     
     sfdata = clean_sf_data(sffile)
-    ladata = clean_la_data(lafile1, lafile2)
+    # ladata = clean_la_data(lafile1, lafile2)
