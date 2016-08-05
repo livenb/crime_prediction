@@ -1,9 +1,13 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from scipy.spatial.distance import cdist, pdist
 from sklearn.decomposition import NMF
+from sklearn.feature_extraction.text import TfidfVectorizer
+import string
+from nltk.stem.wordnet import WordNetLemmatizer
 
 
 def elbow_silhouette_kmeans(X, year=None):
@@ -43,28 +47,48 @@ def kmeans_by_year(X, yrs, years):
     print 'kmeans done!'
 
 
+def get_lemmatized_word(line):
+    lem = WordNetLemmatizer()
+    line = line.lower().split()
+    line = [lem.lemmatize(x.strip(string.punctuation)) for x in line]
+    return ' '.join(line)
+
+
+def get_tfidf(content):
+    content = [get_lemmatized_word(x)  for x in content]
+    vec = TfidfVectorizer(stop_words='english')
+    tfidf = vec.fit_transform(content)
+    return tfidf
+    
+    
 def build_nmf(X, yrs, years):
     Ws = []
     Hs = []
     for yr in years:
+        print yr
         X_yr = X[yrs == yr]
         nmfModel = NMF(n_components=10)
         W = nmfModel.fit_transform(X_yr)
         H = nmfModel.components_
         Ws.append(W)
         Hs.append(H)
+        print H
     return Ws, Hs
 
 
-def plot_cluster():
+def plot_cluster(W):
     plt.figure()
+
     plt.show()
 
 
 if __name__ == '__main__':
     sfdata = pd.read_csv('data/sfpd_clean.csv')
+    tfidf = get_tfidf(sfdata['Descript'].values)
     dropLst = ['Descript', 'PdDistrict', 'Address', 'Year']
     X = sfdata.drop(dropLst, axis=1).values
+    X = np.concatenate((X, tfidf), axis=1)
     yrs = sfdata['Year'].values
     years = sorted(sfdata['Year'].unique())
-    kmeans_by_year(X, yrs, years)
+    # kmeans_by_year(X, yrs, years)
+    Ws, Hs = build_nmf(X, yrs, years)
