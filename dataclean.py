@@ -87,8 +87,19 @@ def clean_la_data(filename1, filename2):
                'VICTIM_COUNT', 'ZIP', 'REPORTING_DISTRICT']
     ladata = ladata.drop(dropLst, axis=1)
     ladata = ladata.dropna()
-    ladata.to_csv('../data/la_clean.csv')
+    ladata.to_csv('data/la_clean.csv')
     return ladata
+
+
+def get_crime_cat(df, catname, cDict):
+    df['CrimeCat'] = 0
+    for key in cDict:
+        crimes = cDict[key]
+        df['CrimeCat'] += df[catname].apply(lambda x:
+                                            key if x in crimes else 0)
+    df = df.drop(df[df['CrimeCat'] == 0].index)
+    return df
+
 
 def clean_ppd_data(filename):
     ppdDict = {1: ['Thefts', 'Theft from Vehicle'], 
@@ -130,6 +141,17 @@ def clean_detroit_data(filename):
                8: ['HOMICIDE', 'JUSTIFIABLE HOMICIDE', 'NEGLIGENT HOMICIDE'],
                9: ['OBSCENITY'],
                10: ['OUIL']}
+    detroitdata = get_crime_cat(detroitdata, 'CATEGORY', dpdDict)
+    detroitdata = detroitdata.drop(detroitdata[(detroitdata['LON'] < -100) | (detroitdata['LON'] > 20)].index)
+    detroitdata['month'] = detroitdata['INCIDENTDATE'].apply(lambda x: int(x.split('/')[0]))
+    detroitdata['day'] = detroitdata['INCIDENTDATE'].apply(lambda x: int(x.split('/')[1]))
+    detroitdata['year'] = detroitdata['INCIDENTDATE'].apply(lambda x: int(x.split('/')[2]))
+    dropLst = ['ROWNUM', 'CASEID', 'CRIMEID', 'CRNO',
+               'CATEGORY', 'STATEOFFENSEFILECLASS', 'INCIDENTDATE',
+               'SCA', 'COUNCIL', 'LOCATION', 'CENSUSTRACT', 'PRECINCT']
+    detroitdata = detroitdata.drop(dropLst, axis=1)
+    detroitdata.to_csv('data/detroit_clean.csv')
+    return detroitdata
 
 
 def clean_nyc_data(filename):
@@ -146,5 +168,7 @@ if __name__ == '__main__':
     sffile = 'data/SFPD.csv'
     lafile1 = 'data/LA_SHERIFF_1.csv'
     lafile2 = 'data/LA_SHERIFF_2.csv'
+    dpdfile = 'data/DPD.csv'
+    
     sfdata = clean_sf_data(sffile)
     ladata = clean_la_data(lafile1, lafile2)
