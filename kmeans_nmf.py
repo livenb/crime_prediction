@@ -4,6 +4,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from scipy.spatial.distance import cdist, pdist
 from sklearn.decomposition import NMF
+from sklearn.preprocessing import OneHotEncoder
 
 
 def elbow_silhouette_kmeans(X, year=None):
@@ -67,4 +68,4 @@ if __name__ == '__main__':
     X = sfdata.drop(dropLst, axis=1).values
     yrs = sfdata['Year'].values
     years = sorted(sfdata['Year'].unique())
-    kmeans_by_year(X, yrs, years)
+    # kmeans_by_year(X, yrs, years)
