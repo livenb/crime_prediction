@@ -37,7 +37,7 @@ def clean_sf_data(filename):
     sfdata['Day'] = sfdata['Date'].apply(lambda x: int(x.split('/')[1]))
     sfdata['Year'] = sfdata['Date'].apply(lambda x: int(x.split('/')[2]))
     dropLst = ['Time', 'Date', 'IncidntNum',
-               'Location', 'Resolution', 'PdId']
+               'Resolution', 'PdId']
     sfdata = sfdata.drop(dropLst, axis=1)
     dowDict = {'Thursday':4, 'Friday':5, 'Wednesday':3,
                 'Monday':1, 'Sunday':7,'Saturday':6, 'Tuesday':2}

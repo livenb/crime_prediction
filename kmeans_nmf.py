@@ -22,7 +22,7 @@ def elbow_silhouette_kmeans(X, year=None):
         model = KMeans(n_clusters=k)
         model.fit(X)
         centroids = model.cluster_centers_
-        labels = model.labels_
+        # labels = model.labels_
         dist = cdist(X, centroids)
         dists.append(dist.min(axis=1).sum())
         # s_scores.append(silhouette_score(X, labels, metric='euclidean'))
@@ -54,7 +54,7 @@ def kmeans_by_year(X, yrs, years):
 def get_lemmatized_word(line):
     lem = WordNetLemmatizer()
     line = line.lower().split()
-    line = [lem.lemmatize(x.strip(string.punctuation).encode()) for x in line]
+    line = [lem.lemmatize(x.strip(string.punctuation).decode('utf-8')) for x in line]
     return ' '.join(line)
 
 
@@ -96,9 +96,9 @@ if __name__ == '__main__':
     yrs = sfdata['Year'].values
     years = sorted(sfdata['Year'].unique())
     # kmeans_by_year(X, yrs, years)
-    Ws, Hs = build_nmf(X, yrs, years)
+    # Ws, Hs = build_nmf(X, yrs, years)
     tfidf = get_tfidf(sfdata['Descript'].values)
-    X_t = np.concatenate((X, tfidf), axis=1)
+    # X_t = np.concatenate((X, tfidf), axis=1)
     # kmeans_by_year(X_t, yrs, years)
     # Ws, Hs = build_nmf(X_t, yrs, years)
 
