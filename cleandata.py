@@ -55,7 +55,7 @@ def merg_la_data(filename1, filename2):
 
 
 def clean_la_data(filename1, filename2):
-    ladict = {1: ['LARCENY THEFT'],
+    laDict = {1: ['LARCENY THEFT'],
               2: ['ROBBERY', ],
               3: ['DRUNK / ALCOHOL / DRUGS', 'NARCOTICS', 'LIQUOR LAWS'],
               4: ['AGGRAVATED ASSAULT', 'NON-AGGRAVATED ASSAULTS'],
@@ -85,7 +85,7 @@ def clean_la_data(filename1, filename2):
                'CRIME_DATE', 'CRIME_IDENTIFIER', 'CRIME_YEAR',
                'GANG_RELATED', 'GEO_CRIME_LOCATION', 'LOCATION',
                'STATE', 'STATION_IDENTIFIER', 'STATISTICAL_CODE',
-               'VICTIM_COUNT', 'ZIP', 'REPORTING_DISTRICT']
+               'VICTIM_COUNT', 'REPORTING_DISTRICT']
     ladata = ladata.drop(dropLst, axis=1)
     ladata = ladata.dropna()
     ladata.to_csv('data/la_clean.csv')
@@ -201,5 +201,5 @@ if __name__ == '__main__':
     lafile2 = 'data/LA_SHERIFF_2.csv'
     dpdfile = 'data/DPD.csv'
     
-    sfdata = clean_sf_data(sffile)
-    # ladata = clean_la_data(lafile1, lafile2)
+    # sfdata = clean_sf_data(sffile)
+    ladata = clean_la_data(lafile1, lafile2)
