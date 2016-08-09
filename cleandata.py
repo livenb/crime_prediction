@@ -39,9 +39,9 @@ def clean_sf_data(filename):
     dropLst = ['Time', 'Date', 'IncidntNum',
                'Resolution', 'PdId']
     sfdata = sfdata.drop(dropLst, axis=1)
-    dowDict = {'Thursday':4, 'Friday':5, 'Wednesday':3,
-                'Monday':1, 'Sunday':7,'Saturday':6, 'Tuesday':2}
-    sfdata['DayOfWeek'] =sfdata['DayOfWeek'].apply(lambda x: dowDict[x]) 
+    dowDict = {'Thursday': 4, 'Friday': 5, 'Wednesday': 3,
+               'Monday': 1, 'Sunday': 7, 'Saturday': 6, 'Tuesday': 2}
+    sfdata['DayOfWeek'] = sfdata['DayOfWeek'].apply(lambda x: dowDict[x])
     sfdata.to_csv('data/sfpd_clean.csv')
     return sfdata
 
