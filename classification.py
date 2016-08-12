@@ -1,3 +1,5 @@
+import  matplotlib
+matplotlib.use('Agg')
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.grid_search import GridSearchCV
@@ -100,12 +102,12 @@ def multiclass_roc(y_score, n_classes=10):
     plt.title('Receiver operating characteristic to multi-class')
     plt.legend(loc="lower right")
     plt.savefig('img/roc_subsample.png')
-    plt.show()
+    # plt.show()
 
 if __name__ == '__main__':
     filename = 'data/la_clean.csv'
     df = load_data(filename)
-    sample = df.sample(frac=0.3)
+    sample = df.sample(frac=0.1)
     X, y = data_preprocess(sample)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
     model, y_score = build_one_model(X_train, y_train, X_test, y_test)
