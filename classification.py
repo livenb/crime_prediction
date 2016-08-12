@@ -39,7 +39,8 @@ def build_one_model(X_train, y_train, X_test, y_test):
     rf = RandomForestClassifier(n_estimators=1000, criterion='entropy',
                                 oob_score=True, n_jobs=-1, verbose=1)
     ovr = OneVsRestClassifier(estimator=rf, n_jobs=-1)
-    y_score = ovr.fit(X_train, y_train).predict_proba(X_test)
+    ovr.fit(X_train, y_train)
+    y_score = ovr.predict_proba(X_test)
     return ovr, y_score
 
 
@@ -96,7 +97,7 @@ def multiclass_roc(y_score, n_classes=10):
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Some extension of Receiver operating characteristic to multi-class')
+    plt.title('Receiver operating characteristic to multi-class')
     plt.legend(loc="lower right")
     plt.savefig('img/roc_subsample.png')
     plt.show()
@@ -110,5 +111,5 @@ if __name__ == '__main__':
     model, y_score = build_one_model(X_train, y_train, X_test, y_test)
     score = model.score(X_train, y_train)
     test_score = model.score(X_test, y_test)
-    print score, test_score
+    # print score, test_score
     multiclass_roc(y_score)
