@@ -40,7 +40,8 @@ def data_preprocess(df):
 def build_one_model(X_train, y_train, X_test, y_test):
     rf = RandomForestClassifier(n_estimators=1000, criterion='entropy',
                                 oob_score=True, n_jobs=-1, verbose=1)
-    ovr = OneVsRestClassifier(estimator=rf, n_jobs=-1)
+    # ovr = OneVsRestClassifier(estimator=rf, n_jobs=-1)
+    ovr = OneVsRestClassifier(estimator=rf)
     ovr.fit(X_train, y_train)
     y_score = ovr.predict_proba(X_test)
     return ovr, y_score
@@ -82,7 +83,7 @@ def multiclass_roc(y_score, n_classes=10):
     tpr["macro"] = mean_tpr
     roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
     # Plot all ROC curves
-    plt.figure()
+    plt.figure(figsize=(15,15))
     plt.plot(fpr["micro"], tpr["micro"],
              label='micro-average ROC curve (area = {0:0.2f})'
                    ''.format(roc_auc["micro"]),
@@ -107,9 +108,9 @@ def multiclass_roc(y_score, n_classes=10):
 if __name__ == '__main__':
     filename = 'data/la_clean.csv'
     df = load_data(filename)
-    sample = df.sample(frac=0.1)
-    X, y = data_preprocess(sample)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    # sample = df.sample(frac=0.1)
+    X, y = data_preprocess(df)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
     model, y_score = build_one_model(X_train, y_train, X_test, y_test)
     score = model.score(X_train, y_train)
     test_score = model.score(X_test, y_test)
