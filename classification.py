@@ -110,9 +110,9 @@ if __name__ == '__main__':
     df = load_data(filename)
     # sample = df.sample(frac=0.1)
     X, y = data_preprocess(df)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
-    model, y_score = build_one_model(X_train, y_train, X_test, y_test)
-    score = model.score(X_train, y_train)
-    test_score = model.score(X_test, y_test)
-    # print score, test_score
-    multiclass_roc(y_score)
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+    # model, y_score = build_one_model(X_train, y_train, X_test, y_test)
+    # score = model.score(X_train, y_train)
+    # test_score = model.score(X_test, y_test)
+    # # print score, test_score
+    # multiclass_roc(y_score)
