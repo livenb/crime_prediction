@@ -5,7 +5,7 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import LabelBinarizer, LabelEncoder
 from sklearn.metrics import make_scorer
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, f1_score
 from scipy import interp
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,9 +43,6 @@ def build_one_model(X_train, y_train, X_test, y_test):
     return ovr, y_score
 
 
-def get_customize_scorer(auc_score):
-    return make_scorer(auc_score)
-
 
 def build_grid_search(X, y):
     parameters = {
@@ -54,7 +51,7 @@ def build_grid_search(X, y):
     }
 
     model_tunning = GridSearchCV(model_to_set, param_grid=parameters,
-                                 score_func=f1_score)
+                                 score_func=make)
     model_tunning.fit(X, y)
 
 def multiclass_roc(y_score, n_classes=10):
@@ -69,58 +66,31 @@ def multiclass_roc(y_score, n_classes=10):
     # Compute micro-average ROC curve and ROC area
     fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_score.ravel())
     roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
-
-
-    ##############################################################################
-    # Plot of a ROC curve for a specific class
-    plt.figure()
-    plt.plot(fpr[2], tpr[2], label='ROC curve (area = %0.2f)' % roc_auc[2])
-    plt.plot([0, 1], [0, 1], 'k--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic example')
-    plt.legend(loc="lower right")
-    plt.show()
-
-
-    ##############################################################################
-    # Plot ROC curves for the multiclass problem
-
     # Compute macro-average ROC curve and ROC area
-
     # First aggregate all false positive rates
     all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
-
     # Then interpolate all ROC curves at this points
     mean_tpr = np.zeros_like(all_fpr)
     for i in range(n_classes):
         mean_tpr += interp(all_fpr, fpr[i], tpr[i])
-
     # Finally average it and compute AUC
     mean_tpr /= n_classes
-
     fpr["macro"] = all_fpr
     tpr["macro"] = mean_tpr
     roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
-
     # Plot all ROC curves
     plt.figure()
     plt.plot(fpr["micro"], tpr["micro"],
              label='micro-average ROC curve (area = {0:0.2f})'
                    ''.format(roc_auc["micro"]),
              linewidth=2)
-
     plt.plot(fpr["macro"], tpr["macro"],
              label='macro-average ROC curve (area = {0:0.2f})'
                    ''.format(roc_auc["macro"]),
              linewidth=2)
-
     for i in range(n_classes):
         plt.plot(fpr[i], tpr[i], label='ROC curve of class {0} (area = {1:0.2f})'
                                        ''.format(i, roc_auc[i]))
-
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -128,15 +98,16 @@ def multiclass_roc(y_score, n_classes=10):
     plt.ylabel('True Positive Rate')
     plt.title('Some extension of Receiver operating characteristic to multi-class')
     plt.legend(loc="lower right")
+    plt.savefig('img/roc_subsample.png')
     plt.show()
 
 if __name__ == '__main__':
     filename = 'data/la_clean.csv'
     df = load_data(filename)
-    sample = df.sample(frac=0.1)
+    sample = df.sample(frac=0.3)
     X, y = data_preprocess(sample)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    model, y_score= build_one_model(X_train, y_train, X_test, y_test)
+    model, y_score = build_one_model(X_train, y_train, X_test, y_test)
     score = model.score(X_train, y_train)
     test_score = model.score(X_test, y_test)
     print score, test_score
