@@ -69,7 +69,7 @@ def build_nmf_all(X, k=5):
     return W, H, labelsNMF, nmfModel
 
 def plot_heatmap(data, title=None, k=5):
-    fig, ax = plt.subplots(figsize = (12, 8))
+    fig, ax = plt.subplots(figsize = (12, 9))
     heatmap = ax.pcolor(data, cmap=plt.cm.Blues)
 
     # put the major ticks at the middle of each cell
@@ -82,7 +82,7 @@ def plot_heatmap(data, title=None, k=5):
     classLabel = ['cls-{}:'.format(i) for i in range(1, k+1)]
     ax.set_xticklabels(classLabel, minor=False)
     ax.set_yticklabels(crimes.values(), minor=False)
-    ax.set_title('Heatmap of Lattent Feature')
+    ax.set_title('Heatmap of Communites Crime Topics')
     if title != None:
         plt.savefig(title)
     # plt.show()
@@ -101,11 +101,11 @@ def get_basemap(shapefile):
                 lon_0= -118.2437,
                 lat_0= 34.0522,
                 ellps = 'WGS84',
-                llcrnrlon=coords[0] - extra * w,
+                llcrnrlon=coords[0],
             #     llcrnrlat=coords[1] - extra + 0.01 * h,
-                llcrnrlat=33.6 - extra + 0.01 * h,
-                urcrnrlon=coords[2] + extra * w,
-                urcrnrlat=coords[3] + extra + 0.01 * h,
+                llcrnrlat=33.6,
+                urcrnrlon=coords[2],
+                urcrnrlat=coords[3],
                 lat_ts=0,
                 resolution='i',
                 suppress_ticks=True)
@@ -182,7 +182,7 @@ def build_map_nmf(df_map, m, coords, info, title):
     # draw wards with grey outlines
     norm = Normalize()
     cmaps = []
-    colors = ['Blues', 'Reds', 'Greens', 'Purples', 'Oranges']
+    colors = ['Blues', 'Greens', 'Purples', 'Reds', 'Oranges']
     for i in xrange(5):
         color = colors[i]
         cmap = plt.get_cmap(color)
@@ -212,13 +212,14 @@ def build_map_yr(data):
     layr = get_year_df(data)
     X_yr = layr.drop(['Year', 'ZIP'], axis=1).values
     W, H, labelsNMF, nmfModel = build_nmf_all(X_yr)
+    plot_heatmap(H.T, 'img/year_H.png')
     m, coords = get_basemap(LA_shapefile)
     new_df = prep_df(layr, W, labelsNMF)
     for yr in xrange(2004, 2016):
         print yr
         df_map = get_df_map(new_df[new_df['Year'] == yr], m)
         title = 'img/la-map-{}.png'.format(yr)
-        info = 'Los Angeles Commuties\nCategoried by Crime\n   {0}'.format(yr)
+        info = 'Los Angeles Commuties\nCategoried by Crime\n Year: {0}'.format(yr)
         build_map_nmf(df_map, m, coords, info, title)
 
 
@@ -294,8 +295,8 @@ def build_map_quater(data):
 if __name__ == '__main__':
     LA_shapefile = 'map/LA-ZIPCodes/geo_export_1cf2ba2c-a35e-47e7-a586-b3ff394055e9'
     ladata = pd.read_csv('data/la_clean.csv')
-    # build_map_yr(ladata)
+    newdf = build_map_yr(ladata)
     # newdf = build_map_month(ladata)
     # build_map_month_yrbased(ladata)
-    newdf = build_map_quater(ladata)
+    # newdf = build_map_quater(ladata)
     # plt.show()
