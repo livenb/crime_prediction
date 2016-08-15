@@ -8,10 +8,16 @@ from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import LabelBinarizer, LabelEncoder
 from sklearn.metrics import make_scorer
 from sklearn.metrics import roc_curve, auc, f1_score
+from sklearn.metrics import roc_auc_score
 from scipy import interp
 import numpy as np
 import matplotlib.pyplot as plt
 import re
+
+
+crimes = {1:'Theft/Larcery', 2:'Robebery', 3:'Nacotic/Alcochol',
+          4:'Assault', 5:'Grand Auto Theft', 6: 'Vandalism',
+          7:'Burglary', 8:'Homicide', 9:'Sex Crime', 10:'DUI'}
 
 
 def load_data(filename):
@@ -30,11 +36,12 @@ def data_preprocess(df):
     le = LabelEncoder()
     df['STREET'] = le.fit_transform(df['STREET'])
     df['CITY'] = le.fit_transform(df['CITY'])
+    feature_names = df.drop(dropLst, axis=1).columns
     X = df.drop(dropLst, axis=1).values
     y = df['CrimeCat'].values
     lb = LabelBinarizer()
     y = lb.fit_transform(y)
-    return X, y
+    return X, y, feature_names
 
 
 def build_one_model(X_train, y_train, X_test, y_test):
@@ -47,18 +54,36 @@ def build_one_model(X_train, y_train, X_test, y_test):
     return ovr, y_score
 
 
+def get_feature_importance(models, fea_names):
+    fea_imp = []
+    for model in models:
+        fea = model.feature_importances_
+        idx = np.argsort(fea)[::-1][:3]
+        fea_imp.append(fea_names[idx])
+        print fea_names[idx]
+    return fea_imp
+
 
 def build_grid_search(X, y):
     parameters = {
         "estimator__criterion": ['gini', 'entropy'],
-        "estimator__max_depth": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "estimator__max_depth": [10, 15, 20, 25, None],
+        "estimator__max_features": ['auto', 'sqrt', 'log2', None]
     }
-
-    model_tunning = GridSearchCV(model_to_set, param_grid=parameters,
-                                 score_func=make)
+    ovr = OneVsRestClassifier(RandomForestClassifier(n_estimators=1000,
+                                    oob_score=True, n_jobs=-1, verbose=1))
+    model_tunning = GridSearchCV(ovr, param_grid=parameters, verbose=1,
+                                 n_jobs=-1, cv=10,
+                                 scoring=make_scorer(f1_score))
     model_tunning.fit(X, y)
+    test_score = model_tunning.best_score_
+    print 'The best test score: ', test_score
+    y_score = model_tunning.predict_proba(X_test)
+    multiclass_roc(y_score, 'grid_search_02')
+    return model_tunning
 
-def multiclass_roc(y_score, n_classes=10):
+
+def multiclass_roc(y_score, title, n_classes=10):
     # Compute ROC curve and ROC area for each class
     fpr = dict()
     tpr = dict()
@@ -93,8 +118,8 @@ def multiclass_roc(y_score, n_classes=10):
                    ''.format(roc_auc["macro"]),
              linewidth=2)
     for i in range(n_classes):
-        plt.plot(fpr[i], tpr[i], label='ROC curve of class {0} (area = {1:0.2f})'
-                                       ''.format(i, roc_auc[i]))
+        plt.plot(fpr[i], tpr[i], label='ROC curve of {0} (area = {1:0.2f})'
+                                       ''.format(crimes[i+1], roc_auc[i]))
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -102,17 +127,18 @@ def multiclass_roc(y_score, n_classes=10):
     plt.ylabel('True Positive Rate')
     plt.title('Receiver operating characteristic to multi-class')
     plt.legend(loc="lower right")
-    plt.savefig('img/roc_subsample.png')
+    plt.savefig('img/'+title+'.png')
     # plt.show()
 
 if __name__ == '__main__':
     filename = 'data/la_clean.csv'
     df = load_data(filename)
     sample = df.sample(frac=0.2)
-    X, y = data_preprocess(sample)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
-    model, y_score = build_one_model(X_train, y_train, X_test, y_test)
-    score = model.score(X_train, y_train)
-    test_score = model.score(X_test, y_test)
+    X, y, fea_names = data_preprocess(sample)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.6)
+    # model, y_score = build_one_model(X_train, y_train, X_test, y_test)
     # print score, test_score
-    multiclass_roc(y_score)
+    # multiclass_roc(y_score)
+    # fea_import = get_feature_importance(model.estimators_, fea_names)
+    gvmodel = build_grid_search(X_train, y_train)
+    
