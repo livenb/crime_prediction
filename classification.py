@@ -1,5 +1,5 @@
-import  matplotlib
-matplotlib.use('Agg')
+# import  matplotlib
+# matplotlib.use('Agg')
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.grid_search import GridSearchCV
@@ -45,7 +45,7 @@ def data_preprocess(df):
 
 
 def build_one_model(X_train, y_train, X_test, y_test):
-    rf = RandomForestClassifier(n_estimators=1000, criterion='entropy',
+    rf = RandomForestClassifier(n_estimators=1000, criterion='gini',
                                 oob_score=True, n_jobs=-1, verbose=1)
     # ovr = OneVsRestClassifier(estimator=rf, n_jobs=-1)
     ovr = OneVsRestClassifier(estimator=rf, n_jobs=-1)
@@ -56,12 +56,30 @@ def build_one_model(X_train, y_train, X_test, y_test):
 
 def get_feature_importance(models, fea_names):
     fea_imp = []
+    tops = []
     for model in models:
         fea = model.feature_importances_
-        idx = np.argsort(fea)[::-1][:3]
-        fea_imp.append(fea_names[idx])
-        print fea_names[idx]
-    return fea_imp
+        idx = np.argsort(fea)[::-1]
+        fea_imp.append(fea)
+        tops.append(fea_names[idx][:3])
+        print fea_names[idx][:3]
+        plt.figure()
+        plt.title("Feature importances")
+        plt.bar(range(len(fea)), fea[idx], align="center")
+        plt.xticks(range(len(fea)), fea_names[idx], rotation=30, alpha=0.7)
+        plt.xlim([-1, len(fea)])
+    plt.show()
+    return fea_imp, tops
+
+
+def plot_fea_impor(fea, fea_names, idx):
+    plt.figure()
+    plt.title("Feature importances")
+    plt.bar(range(len(fea)), fea[idx],
+            color="r", align="center")
+    plt.xticks(range(len(fea)), fea_names[idx])
+    plt.xlim([-1, len(fea)])
+    # plt.show()
 
 
 def build_grid_search(X, y):
@@ -83,7 +101,7 @@ def build_grid_search(X, y):
     return model_tunning
 
 
-def multiclass_roc(y_score, title, n_classes=10):
+def multiclass_roc(y_score, title=None, n_classes=10):
     # Compute ROC curve and ROC area for each class
     fpr = dict()
     tpr = dict()
@@ -127,18 +145,19 @@ def multiclass_roc(y_score, title, n_classes=10):
     plt.ylabel('True Positive Rate')
     plt.title('Receiver operating characteristic to multi-class')
     plt.legend(loc="lower right")
-    plt.savefig('img/'+title+'.png')
-    # plt.show()
+    if title != None:
+        plt.savefig('img/'+title+'.png')
+    plt.show()
 
 if __name__ == '__main__':
     filename = 'data/la_clean.csv'
     df = load_data(filename)
-    sample = df.sample(frac=0.2)
+    sample = df.sample(frac=0.1)
     X, y, fea_names = data_preprocess(sample)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.6)
-    # model, y_score = build_one_model(X_train, y_train, X_test, y_test)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    model, y_score = build_one_model(X_train, y_train, X_test, y_test)
     # print score, test_score
-    # multiclass_roc(y_score)
-    # fea_import = get_feature_importance(model.estimators_, fea_names)
-    gvmodel = build_grid_search(X_train, y_train)
+    multiclass_roc(y_score, )
+    fea_import, tops = get_feature_importance(model.estimators_, fea_names)
+    # gvmodel = build_grid_search(X_train, y_train)
     
