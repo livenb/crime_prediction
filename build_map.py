@@ -7,6 +7,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib import cm
+import matplotlib.patches as mpatches
 from mpl_toolkits.basemap import Basemap
 import fiona
 from descartes import PolygonPatch
@@ -22,6 +23,11 @@ from pysal.esda.mapclassify import Natural_Breaks
 crimes = {1: 'Theft/Larcery', 2: 'Robebery', 3: 'Nacotic/Alcochol',
           4: 'Assault', 5: 'Grand Auto Theft', 6: 'Vandalism',
           7: 'Burglary', 8: 'Homicide', 9: 'Sex Crime', 10: 'DUI'}
+CrimePatterns = {0: 'Stealing Things', 1: 'Life Threatening',
+                 2: 'GTA/Robbery', 3: 'Drug Related',
+                 4: 'Drunk Driver', 5: 'Unspecify'}
+colors = ['blue', 'green', 'purple', 'red', 'orange', 'grey']
+colormaps = ['Blues', 'Greens', 'Purples', 'Reds', 'Oranges']
 
 
 def get_year_df(df):
@@ -79,7 +85,7 @@ def plot_heatmap(data, title=None, k=5):
     # want a more natural, table-like display
 #     ax.invert_yaxis()
 #     ax.xaxis.tick_top()
-    classLabel = ['cls-{}:'.format(i) for i in range(1, k+1)]
+    classLabel = [CrimePatterns[i] for i in range(k)]
     ax.set_xticklabels(classLabel, minor=False)
     ax.set_yticklabels(crimes.values(), minor=False)
     ax.set_title('Heatmap of Communites Crime Topics')
@@ -179,12 +185,11 @@ def build_map_nmf(df_map, m, coords, info, title):
     # plt.clf()
     fig = plt.figure()
     ax = fig.add_subplot(111, axisbg='w', frame_on=True)
+    
     # draw wards with grey outlines
     norm = Normalize()
-    cmaps = []
-    colors = ['Blues', 'Greens', 'Purples', 'Reds', 'Oranges']
     for i in xrange(5):
-        color = colors[i]
+        color = colormaps[i]
         cmap = plt.get_cmap(color)
         pc = PatchCollection(df_map[df_map['class'] == i+1]['patches'], match_original=True, alpha=0.8)
         pc.set_facecolor(cmap(norm(df_map.loc[(df_map['class'] == i+1), i].values)))
@@ -192,8 +197,9 @@ def build_map_nmf(df_map, m, coords, info, title):
     pc = PatchCollection(df_map[df_map['class'] == 0]['patches'], match_original=True, alpha=0.2)
     pc.set_facecolor('grey')
     ax.add_collection(pc)
-    x, y = m(coords[0] + 0.05, coords[1] + 1.0)
-    details = plt.annotate(info, xy=(x, y), size=22, color='#555555')
+    x, y = m(coords[0] + 0.02, coords[1] + 1.0)
+    details = plt.annotate(info, xy=(x, y), size=24, color='#555555')
+    
     # Draw a map scale
     m.drawmapscale(
         coords[0] + 0.2, coords[1] + 0.95,
@@ -203,9 +209,17 @@ def build_map_nmf(df_map, m, coords, info, title):
         fillcolor1='w', fillcolor2='#555555',
         fontcolor='#555555', units='mi',
         zorder=5)
+    legend_patches = []
+    for i in range(6):
+        legend_patches.append(mpatches.Patch(color=colors[i],
+                                             label=CrimePatterns[i]))
+    plt.legend(handles=legend_patches, loc='lower right')
+    x1, y1 = m(coords[0] + 0.05, 33.62)
+    colorinfo = 'Color represent each cluster of community;\nBrightness represent the severities of crime in each community'
+    plt.annotate(colorinfo, xy=(x1, y1), size=16, color='#555555')
     plt.tight_layout()
-    fig.set_size_inches(12, 16)
-    plt.savefig(title, dpi=240, alpha=True)
+    fig.set_size_inches(12, 13)
+    plt.savefig(title, dpi=300, alpha=True)
 
 
 def build_map_yr(data):
