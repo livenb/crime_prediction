@@ -13,5 +13,5 @@ Data are coming from [publicsafetydataportal.org](https://publicsafetydataportal
 
 ### Community Categorization
 In order to compare between community, the data has to be aggregate for each zip code and by each type of the crime in a desired time interval. Here is the screenshot for LA data.:
-![alt text][la_data]
-[la_data]:img\la_data_agg.png
+![aggregate data sample][la_data]
+[la_data]:https://github.com/livenb/crime_prediction/blob/master/img/la_data_agg.png
