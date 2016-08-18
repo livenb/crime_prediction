@@ -36,3 +36,10 @@ Let's make a map. The file can be down load from the open data from each city. L
 As showing above, plotting one map for each year and putting into a sequence, the dynamic changes of community can be shown in a video. The Los Angeles community evolution year by year can be found in `movie/la_yr.mp4`.  
 The video is combined by a series of png plotted by matplotlib basemap with ffmepg by using the following command `ffmpeg -f image2 -r 1 -i la-map-20%02d.png -vcodec mpeg4 -y movie.mp4`.
 The map plotting file can found in `code/build_map.py`
+
+### Crime type prediction
+![Feature Importance][fea]
+[fea]:img/fea.png
+
+![ROC][roc]
+[roc]:img/roc_grid.png
