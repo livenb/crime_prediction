@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.cm import get_cmap
 from matplotlib import cm
 import matplotlib.patches as mpatches
 from mpl_toolkits.basemap import Basemap
@@ -70,13 +71,13 @@ def build_nmf_all(X, k=5):
     W = nmfModel.fit_transform(X_sca)
     H = nmfModel.components_
     print 'NMF done!'
-    plot_heatmap(H.T, k=k)
+    # plot_heatmap(H.T, k=k)
     labelsNMF = W.argmax(axis=1)
     return W, H, labelsNMF, nmfModel
 
-def plot_heatmap(data, title=None, k=5):
-    fig, ax = plt.subplots(figsize = (12, 9))
-    heatmap = ax.pcolor(data, cmap=plt.cm.Blues)
+def plot_heatmap(data, CrimePatterns, title=None, k=5, cmap=plt.cm.Blues):
+    fig, ax = plt.subplots(figsize=(12, 9))
+    heatmap = ax.pcolor(data, cmap=cmap)
 
     # put the major ticks at the middle of each cell
     ax.set_xticks(np.arange(k)+0.5, minor=False, )
@@ -181,7 +182,7 @@ def get_df_map(df, m):
 #     print df_map.head()
     return df_map
 
-def build_map_nmf(df_map, m, coords, info, title):
+def build_map_nmf(df_map, m, coords, info, title, CrimePatterns):
     # plt.clf()
     fig = plt.figure()
     ax = fig.add_subplot(111, axisbg='w', frame_on=True)
@@ -284,6 +285,9 @@ def build_map_month(data):
     return new_df
 
 def build_map_quater(data):
+    CrimePatterns = {0: 'GTA/Robbery', 1: 'Life Threatening',
+                     2: 'Stealing Things', 3: 'Drug/Violent',
+                     4: 'Drunk Driver', 5: 'Unspecify'}
     laqt = get_quater_df(data)
     X_qt = laqt.drop(['Year', 'Quater', 'ZIP'], axis=1).values
     W, H, labelsNMF, nmfModel = build_nmf_all(X_qt)
@@ -300,17 +304,17 @@ def build_map_quater(data):
             else:
                 title = 'img/la0{}.png'.format(cnt)
             info = 'Los Angeles Commuties\nCategoried by Crime\nYear{0}-Qt.{1}'.format(yr, qt)
-            build_map_nmf(df_map, m, coords, info, title)
+            build_map_nmf(df_map, m, coords, info, title, CrimePatterns)
             cnt += 1
-    plot_heatmap(H.T, 'img/quater_H.png')
+    plot_heatmap(H.T, CrimePatterns, 'img/quater_H.png')
     return new_df
 
 
 if __name__ == '__main__':
     LA_shapefile = 'map/LA-ZIPCodes/geo_export_1cf2ba2c-a35e-47e7-a586-b3ff394055e9'
     ladata = pd.read_csv('data/la_clean.csv')
-    newdf = build_map_yr(ladata)
+    # newdf = build_map_yr(ladata)
     # newdf = build_map_month(ladata)
     # build_map_month_yrbased(ladata)
-    # newdf = build_map_quater(ladata)
+    newdf = build_map_quater(ladata)
     # plt.show()
