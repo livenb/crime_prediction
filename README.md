@@ -1,7 +1,9 @@
+
+---------------------
+#### This repo is under reconstruction, will be finished ASAP !!!
+---------------------
+
 # Community evolution and Crime prediction
----------------------
-## This repo is under reconstructing, will finish ASAP!!!
----------------------
 >'Don't go there, you will get shot!'
 
 This is the word my friend told me at my first day in US. For all these years, I always concern about the safety when I visit a new area.  
