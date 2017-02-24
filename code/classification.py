@@ -2,18 +2,23 @@
 # matplotlib.use('Agg')
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.grid_search import GridSearchCV
+from sklearn.model_selection import GridSearchCV
 from sklearn.multiclass import OneVsRestClassifier
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer, LabelEncoder
 from sklearn.metrics import make_scorer
 from sklearn.metrics import roc_curve, auc, f1_score
+from sklearn.metrics import precision_score, recall_score
 from sklearn.metrics import roc_auc_score
 from scipy import interp
 import numpy as np
 import matplotlib.pyplot as plt
 import re
-
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation
+from keras.layers.normalization import BatchNormalization
+from keras.layers.advanced_activations import PReLU
+from keras.wrappers.scikit_learn import KerasRegressor
 
 crimes = {1:'Theft/Larcery', 2:'Robebery', 3:'Nacotic/Alcochol',
           4:'Assault', 5:'Grand Auto Theft', 6: 'Vandalism',
@@ -45,29 +50,32 @@ def data_preprocess(df):
 
 
 def build_one_model(X_train, y_train, X_test, y_test):
-    rf = RandomForestClassifier(n_estimators=1000, criterion='gini',
-                                oob_score=True, n_jobs=-1, verbose=1)
+    rf = RandomForestClassifier(n_estimators=500, criterion='gini',
+                                oob_score=True, class_weight='balanced',
+                                n_jobs=-1, verbose=1)
     # ovr = OneVsRestClassifier(estimator=rf, n_jobs=-1)
-    ovr = OneVsRestClassifier(estimator=rf, n_jobs=-1)
-    ovr.fit(X_train, y_train)
-    y_score = ovr.predict_proba(X_test)
-    return ovr, y_score
+    # ovr = OneVsRestClassifier(estimator=rf, n_jobs=-1)
+    # ovr.fit(X_train, y_train)
+    # y_score = ovr.predict_proba(X_test)
+    rf.fit(X_train, y_train)
+    y_score = rf.predict_proba(X_test)
+    y_score = np.array(y_score)[:,:,1].T
+    return rf, y_score
 
 
-def get_feature_importance(models, fea_names):
+def get_feature_importance(model, fea_names):
     fea_imp = []
     tops = []
-    for model in models:
-        fea = model.feature_importances_
-        idx = np.argsort(fea)[::-1]
-        fea_imp.append(fea)
-        tops.append(fea_names[idx][:3])
-        print fea_names[idx][:3]
-        plt.figure()
-        plt.title("Feature importances")
-        plt.bar(range(len(fea)), fea[idx], align="center")
-        plt.xticks(range(len(fea)), fea_names[idx], rotation=30, alpha=0.7)
-        plt.xlim([-1, len(fea)])
+    fea = model.feature_importances_
+    idx = np.argsort(fea)
+    fea_imp.append(fea)
+    tops.append(fea_names[idx][:3])
+    # print fea_names[idx][:3]
+    plt.figure()
+    plt.title("Feature importances")
+    plt.barh(range(len(fea)), fea[idx], align="center")
+    plt.yticks(range(len(fea)), fea_names[idx])
+    plt.ylim([-1, len(fea)])
     plt.show()
     return fea_imp, tops
 
@@ -75,7 +83,7 @@ def get_feature_importance(models, fea_names):
 def plot_fea_impor(fea, fea_names, idx):
     plt.figure()
     plt.title("Feature importances")
-    plt.bar(range(len(fea)), fea[idx],
+    plt.barh(range(len(fea)), fea[idx],
             color="r", align="center")
     plt.xticks(range(len(fea)), fea_names[idx])
     plt.xlim([-1, len(fea)])
@@ -147,17 +155,49 @@ def multiclass_roc(y_score, title=None, n_classes=10):
     plt.legend(loc="lower right")
     if title != None:
         plt.savefig('img/'+title+'.png')
-    plt.show()
+    # plt.show()
+
+def create_net():
+    model = Sequential()
+
+    model.add(Dense(400, input_dim = X_train.shape[1], init = 'he_normal'))
+    model.add(PReLU())
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+
+    model.add(Dense(200, init = 'he_normal'))
+    model.add(PReLU())
+    model.add(BatchNormalization())
+    model.add(Dropout(0.2))
+
+    model.add(Dense(50, init = 'he_normal'))
+    model.add(PReLU())
+    model.add(BatchNormalization())
+    model.add(Dropout(0.2))
+
+    model.add(Dense(output_dim=10, init = 'he_normal'))
+    model.add(Activation('softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='sgd',
+                  metrics=['categorical_accuracy'])
+    return(model)
 
 if __name__ == '__main__':
-    filename = 'data/la_clean.csv'
+    filename = '../data/la_clean.csv'
     df = load_data(filename)
-    sample = df.sample(frac=0.1)
-    X, y, fea_names = data_preprocess(sample)
+    # sample = df.sample(frac=0.8)
+    X, y, fea_names = data_preprocess(df)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    model, y_score = build_one_model(X_train, y_train, X_test, y_test)
+    # model, y_score = build_one_model(X_train, y_train, X_test, y_test)
     # print score, test_score
-    multiclass_roc(y_score, )
-    fea_import, tops = get_feature_importance(model.estimators_, fea_names)
+    # multiclass_roc(y_score, )
+    # y_pred = model.predict(X_test)
+    # print 'f1 score:', f1_score(y_test, y_pred)
+    # print 'precision:', precision_score(y_test, y_pred)
+    # print 'recall:', recall_score(y_test, y_pred)
+    # fea_import, tops = get_feature_importance(model, fea_names)
     # gvmodel = build_grid_search(X_train, y_train)
-    
+
+    nn = create_net()
+    nn.fit(X_train, y_train,
+           nb_epoch=20,
+           batch_size=256)
